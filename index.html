@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>♥♥♥ HCN 상담지원 AI 챗봇(상다미) ♥♥♥</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            flex: 1;
+            width: 100%;
+            max-width: 1000px;
+            height: 90vh;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+            background-color: #ffffff;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            margin: 20px;
+        }
+
+        .chat-header {
+            padding: 15px;
+            font-size: 22px;
+            font-weight: 600;
+            background-color: #4A90E2;
+            color: white;
+            text-align: center;
+        }
+
+        .message-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+
+        .message {
+            padding: 12px 20px;
+            margin-bottom: 12px;
+            border-radius: 25px;
+            max-width: 100%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            animation: fadeIn 0.3s ease-in;
+            word-wrap: break-word;
+            white-space: pre-wrap; /* 줄 바꿈과 들여쓰기 지원 */
+            line-height: 1.5; /* 줄 간격 설정 */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: #4A90E2;
+            color: white;
+            text-align: right;
+        }
+
+        .bot-message {
+            align-self: flex-start;
+            background-color: #e3f3ff;
+            color: #333;
+            text-align: left;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            background-color: #ffffff;
+            border-top: 1px solid #ddd;
+            padding: 10px 15px;
+        }
+
+        .input-container input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-container input:focus {
+            border-color: #4A90E2;
+            box-shadow: 0 0 5px rgba(74, 144, 226, 0.5);
+        }
+
+        .input-container button {
+            padding: 10px 20px;
+            margin-left: 10px;
+            background-color: #4A90E2;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .input-container button:hover {
+            background-color: #357ABD;
+        }
+
+        .upload-container {
+            padding: 15px;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            border-top: 1px solid #ddd;
+        }
+
+        .upload-container input[type="file"] {
+            flex: 1;
+            padding: 10px;
+            margin-right: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .upload-container button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .upload-container button:hover {
+            background-color: #218838;
+        }
+
+        /* 반응형 디자인 적용 */
+        @media (max-width: 768px) {
+            .chat-container {
+                max-width: 100%;
+                margin: 10px;
+            }
+
+            .message {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .input-container button,
+            .upload-container button {
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+
+            .input-container input,
+            .upload-container input[type="file"] {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">♥♥♥ HCN 상담지원 AI 챗봇(상다미) ♥♥♥</div>
+        <div id="messageContainer1" class="message-container"></div>
+        <div class="input-container">
+            <input type="text" id="userInput1" placeholder="여기에 궁금하신 사항을 입력하세요...">
+            <button onclick="sendMessage('userInput1', 'messageContainer1')">보내기</button>
+            <button onclick="startVoiceRecognition('userInput1')">음성 입력</button>
+        </div>
+        <!-- 파일 업로드 영역 -->
+        <div class="upload-container">
+            <input type="file" id="audioFile" accept="audio/*">
+            <button onclick="uploadFile()">상담녹취 파일 텍스트로 변환하기</button>
+        </div>
+    </div>
+
+    <script>
+        window.onload = async function() {
+            try {
+                const response = await fetch('/welcome');
+                const data = await response.json();
+                if (data.reply) {
+                    addMessage(data.reply, 'messageContainer1', 'bot-message');
+                }
+            } catch (error) {
+                console.error('Error fetching welcome message:', error);
+                addMessage('웰컴 메시지를 불러오지 못했습니다.', 'messageContainer1', 'bot-message');
+            }
+        };
+
+        function addMessage(content, messageContainerId, className) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${className}`;
+            messageDiv.innerHTML = content;
+            document.getElementById(messageContainerId).appendChild(messageDiv);
+            document.getElementById(messageContainerId).scrollTop = document.getElementById(messageContainerId).scrollHeight;
+        }
+
+        document.getElementById('userInput1').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && this.value.trim() !== '') {
+                sendMessage('userInput1', 'messageContainer1');
+            }
+        });
+
+        async function sendMessage(userInputId, messageContainerId) {
+            const userInput = document.getElementById(userInputId).value;
+            if (!userInput) return;
+            toggleInput(userInputId, false);
+            addMessage(userInput, messageContainerId, 'user-message');
+            document.getElementById(userInputId).value = '';
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: userInput }),
+                });
+                const data = await response.json();
+                if (data.reply) {
+                    addMessage(data.reply, messageContainerId, 'bot-message');
+                } else {
+                    addMessage('오류: ' + data.error, messageContainerId, 'bot-message');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('오류 발생: ' + error.message, messageContainerId, 'bot-message');
+            } finally {
+                toggleInput(userInputId, true);
+            }
+        }
+
+        function toggleInput(inputId, enable) {
+            const inputField = document.getElementById(inputId);
+            const button = inputField.nextElementSibling;
+            if (enable) {
+                inputField.disabled = false;
+                button.disabled = false;
+            } else {
+                inputField.disabled = true;
+                button.disabled = true;
+            }
+        }
+
+        function startVoiceRecognition(inputId) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("이 브라우저에서는 음성 인식을 지원하지 않습니다.");
+                return;
+            }
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'ko-KR';
+            recognition.onresult = function (event) {
+                let finalTranscript = '';
+                for (let i = 0; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript;
+                    }
+                }
+                if (finalTranscript) {
+                    document.getElementById(inputId).value = finalTranscript;
+                    sendMessage(inputId, 'messageContainer1');
+                } else {
+                    alert("음성 인식에 실패했습니다. 다시 시도해주세요.");
+                }
+            };
+            recognition.onerror = function (event) {
+                console.error('음성 인식 오류:', event.error);
+                alert('음성 인식 중 오류가 발생했습니다: ' + event.error);
+            };
+            recognition.onend = function () { console.log("음성 인식 종료."); };
+            recognition.start();
+        }
+
+        async function uploadFile() {
+            const fileInput = document.getElementById('audioFile');
+            const resultDiv = document.getElementById('userInput1');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('파일을 선택하세요.');
+                return;
+            }
+            const formData = new FormData();
+            formData.append('file', file);
+            try {
+                const response = await fetch('/upload', { method: 'POST', body: formData });
+                
+                // 응답이 JSON인지 확인하는 코드 추가
+                const contentType = response.headers.get('Content-Type');
+                if (contentType && contentType.includes('application/json')) {
+                    const data = await response.json();
+                    if (data.text) {
+                        resultDiv.value = data.text;
+                    } else {
+                        resultDiv.value = '오류: ' + data.error;
+                    }
+                } else {
+                    resultDiv.value = '오류: 서버에서 올바르지 않은 응답을 반환했습니다.';
+                }
+            } catch (error) {
+                resultDiv.value = '오류 발생: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
